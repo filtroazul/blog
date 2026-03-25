@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filtro Azul</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #0A4BDB;
+    --azul-cintilante: #1A6FFF;
+    --vermelho: #CC0000;
+    --vermelho-cintilante: #EE0000;
+    --borda: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante));
+    --preto: #080810;
+    --preto-card: #0E0E1A;
+    --branco: #F4F4F8;
+    --cinza: #7A7A8A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--preto);
+    color: var(--branco);
+    overflow-x: hidden;
+  }
+
+  /* ===== ANIMAÇÕES ===== */
+  @keyframes shimmer-blue {
+    0%,100% { text-shadow: 0 0 8px rgba(26,111,255,0.6), 0 0 20px rgba(26,111,255,0.3); }
+    50% { text-shadow: 0 0 16px rgba(26,111,255,1), 0 0 40px rgba(26,111,255,0.5), 0 0 60px rgba(10,75,219,0.3); }
+  }
+  @keyframes shimmer-red {
+    0%,100% { text-shadow: 0 0 8px rgba(238,0,0,0.6), 0 0 20px rgba(238,0,0,0.3); }
+    50% { text-shadow: 0 0 16px rgba(238,0,0,1), 0 0 40px rgba(238,0,0,0.5); }
+  }
+  @keyframes border-glow {
+    0%,100% { box-shadow: 0 0 4px rgba(26,111,255,0.2), inset 0 0 4px rgba(238,0,0,0.05); }
+    50% { box-shadow: 0 0 12px rgba(238,0,0,0.3), inset 0 0 8px rgba(26,111,255,0.1); }
+  }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes lineGrow { to { width: 100%; } }
+  @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.4);} }
+  @keyframes flicker { 0%,100%{opacity:1;} 45%{opacity:0.85;} 50%{opacity:0.6;} 55%{opacity:0.9;} }
+
+  /* ===== CORTINAS ===== */
+  #curtain-screen {
+    position: fixed; inset: 0; z-index: 9000;
+    display: flex;
+    background: #050508;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  #curtain-screen.opened { pointer-events: none; }
+
+  .curtain {
+    width: 50%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: transform 1.8s cubic-bezier(0.77, 0, 0.18, 1);
+  }
+  .curtain-left { transform-origin: left center; }
+  .curtain-right { transform-origin: right center; }
+  #curtain-screen.opened .curtain-left { transform: translateX(-100%); }
+  #curtain-screen.opened .curtain-right { transform: translateX(100%); }
+
+  .curtain-fabric {
+    width: 100%; height: 100%;
+    position: relative;
+    background: #8B0000;
+  }
+  /* folds / drapes via múltiplas sombras internas */
+  .curtain-left .curtain-fabric {
+    background:
+      repeating-linear-gradient(
+        180deg,
+        rgba(0,0,0,0) 0px,
+        rgba(0,0,0,0.08) 60px,
+        rgba(0,0,0,0) 120px
+      ),
+      linear-gradient(
+        90deg,
+        #5a0000 0%,
+        #8B0000 8%,
+        #a80000 16%,
+        #7a0000 24%,
+        #9e0000 32%,
+        #6d0000 40%,
+        #a10000 48%,
+        #730000 56%,
+        #9c0000 64%,
+        #6a0000 72%,
+        #950000 80%,
+        #5f0000 88%,
+        #7a0000 100%
+      );
+    animation: curtain-sway-l 4s ease-in-out infinite;
+  }
+  .curtain-right .curtain-fabric {
+    background:
+      repeating-linear-gradient(
+        180deg,
+        rgba(0,0,0,0) 0px,
+        rgba(0,0,0,0.08) 60px,
+        rgba(0,0,0,0) 120px
+      ),
+      linear-gradient(
+        90deg,
+        #7a0000 0%,
+        #5f0000 12%,
+        #950000 20%,
+        #6a0000 28%,
+        #9c0000 36%,
+        #730000 44%,
+        #a10000 52%,
+        #6d0000 60%,
+        #9e0000 68%,
+        #7a0000 76%,
+        #a80000 84%,
+        #8B0000 92%,
+        #5a0000 100%
+      );
+    animation: curtain-sway-r 4.4s ease-in-out infinite;
+  }
+
+  /* brilho no topo da cortina (vara) */
+  .curtain-left .curtain-fabric::before,
+  .curtain-right .curtain-fabric::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 12px;
+    background: linear-gradient(180deg, rgba(200,180,160,0.35), transparent);
+    z-index: 2;
+  }
+  /* sombra interior */
+  .curtain-left .curtain-fabric::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 70%, rgba(0,0,0,0.45) 100%);
+  }
+  .curtain-right .curtain-fabric::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0.45) 0%, transparent 30%);
+  }
+
+  /* vinco central (junção das cortinas) */
+  #curtain-screen::after {
+    content: '';
+    position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 4px; transform: translateX(-50%);
+    background: linear-gradient(180deg, #c8b4a0 0%, #6a0000 10%, #3a0000 50%, #6a0000 90%, #c8b4a0 100%);
+    z-index: 2;
+    transition: opacity 0.4s;
+  }
+  #curtain-screen.opened::after { opacity: 0; }
+
+  @keyframes curtain-sway-l {
+    0%,100% { background-size: 100% 100%; filter: brightness(1); }
+    50% { filter: brightness(1.06); background-position: 2px 0; }
+  }
+  @keyframes curtain-sway-r {
+    0%,100% { filter: brightness(1); }
+    50% { filter: brightness(1.07); background-position: -2px 0; }
+  }
+
+  /* instrução sobre a cortina */
+  .curtain-hint {
+    position: absolute;
+    bottom: 10%;
+    left: 50%; transform: translateX(-50%);
+    z-index: 10;
+    text-align: center;
+    pointer-events: none;
+    animation: hint-breathe 2.5s ease-in-out infinite;
+  }
+  @keyframes hint-breathe {
+    0%,100% { opacity: 0.55; transform: translateX(-50%) translateY(0); }
+    50% { opacity: 0.9; transform: translateX(-50%) translateY(-4px); }
+  }
+  .curtain-hint p {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(0.85rem, 2vw, 1.1rem);
+    font-style: italic;
+    color: rgba(244,220,180,0.75);
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 12px rgba(180,80,0,0.5);
+  }
+  .curtain-hint span {
+    display: block; margin-top: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.68rem; letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(244,220,180,0.5);
+  }
+  #curtain-screen.opened .curtain-hint { opacity: 0; transition: opacity 0.3s; }
+
+  /* título no centro da cortina */
+  .curtain-title {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 10; text-align: center;
+    pointer-events: none;
+  }
+  .curtain-title h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: rgba(244,220,180,0.22);
+    letter-spacing: 0.12em;
+    text-shadow: 0 0 30px rgba(200,100,0,0.3);
+    font-style: italic;
+  }
+  #curtain-screen.opened .curtain-title { opacity: 0; transition: opacity 0.3s; }
+
+  /* ===== LOADER ===== */
+  #loader {
+    position: fixed; inset: 0;
+    background: var(--preto);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 8999;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #loader.hide { opacity: 0; visibility: hidden; }
+  .loader-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: var(--branco);
+    letter-spacing: 0.05em;
+    overflow: hidden;
+  }
+  .loader-text span { display: inline-block; animation: slideUp 0.6s cubic-bezier(.16,1,.3,1) both; }
+  .loader-text span:nth-child(1) { animation-delay: 0.1s; color: var(--azul-cintilante); animation: slideUp 0.6s cubic-bezier(.16,1,.3,1) both 0.1s, shimmer-blue 2.5s ease-in-out infinite 0.8s; }
+  .loader-text span:nth-child(2) { animation-delay: 0.3s; color: var(--vermelho-cintilante); animation: slideUp 0.6s cubic-bezier(.16,1,.3,1) both 0.3s, shimmer-red 2.5s ease-in-out infinite 1s; }
+  .loader-underline {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--azul-cintilante), var(--vermelho-cintilante), transparent);
+    width: 0; margin: 12px auto 0;
+    animation: lineGrow 0.6s 0.7s ease forwards;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(8,8,16,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid transparent;
+    border-image: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante)) 1;
+    animation: border-glow 3s ease-in-out infinite;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5vw;
+    height: 64px;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-filtro { color: var(--azul-cintilante); animation: shimmer-blue 3s ease-in-out infinite; }
+  .logo-azul { color: var(--vermelho-cintilante); animation: shimmer-red 3s ease-in-out infinite; }
+
+  nav { display: flex; align-items: center; gap: 2rem; }
+  nav a {
+    font-size: 0.82rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: rgba(244,244,248,0.7);
+    text-decoration: none; position: relative; padding-bottom: 2px;
+    transition: color 0.2s;
+  }
+  nav a::after {
+    content: '';
+    position: absolute; left: 0; bottom: -2px;
+    width: 0; height: 1px;
+    background: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante));
+    transition: width 0.3s ease;
+  }
+  nav a:hover::after, nav a.active::after { width: 100%; }
+  nav a:hover, nav a.active { color: var(--branco); }
+
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+  .hamburger span { display: block; width: 24px; height: 1.5px; background: var(--branco); }
+
+  /* ===== HERO ===== */
+  .hero {
+    margin-top: 64px;
+    padding: 80px 5vw 60px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4rem; align-items: center; min-height: 80vh;
+    border-bottom: 1px solid transparent;
+    border-image: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante)) 1;
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.9s ease 0.5s, transform 0.9s ease 0.5s;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 20% 50%, rgba(10,75,219,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(204,0,0,0.06) 0%, transparent 60%);
+  }
+  .hero.visible { opacity: 1; transform: translateY(0); }
+  .hero-tag {
+    display: inline-block; font-size: 0.72rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--azul-cintilante);
+    border: 1px solid var(--azul-cintilante);
+    padding: 4px 12px; border-radius: 1px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 4.5vw, 4rem);
+    line-height: 1.15; font-weight: 700; margin-bottom: 24px;
+  }
+  .hero h1 .h-azul { color: var(--azul-cintilante); animation: shimmer-blue 3s ease-in-out infinite; }
+  .hero h1 .h-vermelho { color: var(--vermelho-cintilante); font-style: italic; animation: shimmer-red 3s ease-in-out infinite; }
+  .hero-desc { font-size: 1rem; line-height: 1.75; color: rgba(244,244,248,0.65); max-width: 480px; margin-bottom: 32px; }
+  .hero-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: transparent;
+    color: var(--branco);
+    font-size: 0.82rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    padding: 14px 28px;
+    border: 0; border-radius: 1px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    position: relative;
+  }
+  .hero-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 1px;
+    padding: 1px;
+    background: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+  }
+  .hero-btn:hover { background: rgba(26,111,255,0.08); transform: translateY(-2px); }
+  .hero-btn svg { transition: transform 0.3s; }
+  .hero-btn:hover svg { transform: translateX(4px); }
+
+  .hero-visual { position: relative; height: 480px; display: flex; align-items: center; justify-content: center; }
+  .hero-img-frame {
+    width: 340px; height: 420px;
+    background: var(--preto-card);
+    border-radius: 2px; overflow: hidden; position: relative;
+    border: 0; outline: none;
+  }
+  .hero-img-frame::before {
+    content: '';
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(135deg, rgba(10,75,219,0.15) 0%, transparent 50%, rgba(204,0,0,0.1) 100%);
+  }
+  /* gradient border */
+  .hero-img-frame::after {
+    content: '';
+    position: absolute; inset: 0; z-index: 0;
+    border-radius: 2px;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--azul-cintilante), var(--vermelho-cintilante));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    animation: border-glow 3s ease-in-out infinite;
+  }
+  .hero-img-frame-inner {
+    position: absolute; inset: 0; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px;
+  }
+  .hero-quote {
+    font-family: 'Playfair Display', serif; font-size: 1.4rem;
+    color: var(--branco); line-height: 1.5; text-align: center; font-style: italic; margin-bottom: 20px;
+  }
+  .hero-quote-line { width: 40px; height: 1px; background: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante)); margin: 0 auto; }
+  .hero-badge {
+    position: absolute; top: 24px; right: -16px; z-index: 3;
+    background: var(--vermelho); color: white;
+    font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 8px 16px; writing-mode: vertical-rl; transform: rotate(180deg);
+    border-left: 1px solid rgba(26,111,255,0.5);
+    animation: shimmer-red 3s ease-in-out infinite;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section { padding: 80px 5vw; }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 700;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+    color: var(--branco);
+  }
+  .section-title::before { content: ''; width: 28px; height: 1px; background: linear-gradient(90deg, var(--azul-cintilante), transparent); display: inline-block; }
+  .section-subtitle { font-size: 0.9rem; color: var(--cinza); margin-bottom: 48px; letter-spacing: 0.05em; }
+
+  /* ===== POSTS GRID ===== */
+  .posts-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+    border: 1px solid transparent;
+    background: linear-gradient(var(--preto-card), var(--preto-card)) padding-box,
+                linear-gradient(135deg, var(--azul-cintilante), var(--vermelho-cintilante)) border-box;
+  }
+  .post-card {
+    border: 0.5px solid rgba(26,111,255,0.12);
+    padding: 32px; cursor: pointer; position: relative; overflow: hidden;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease, background 0.3s;
+    background: var(--preto-card);
+  }
+  .post-card.visible { opacity: 1; transform: translateY(0); }
+  .post-card::after {
+    content: ''; position: absolute; bottom: 0; left: 0;
+    height: 1px; width: 0;
+    background: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante));
+    transition: width 0.4s ease;
+  }
+  .post-card:hover::after { width: 100%; }
+  .post-card:hover { background: rgba(26,111,255,0.04); }
+  .post-card.featured { grid-column: span 2; background: rgba(10,75,219,0.06); }
+  .post-card.featured:hover { background: rgba(10,75,219,0.1); }
+
+  .post-category {
+    font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--azul-cintilante); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .post-card.featured .post-category { color: var(--vermelho-cintilante); }
+  .cat-dot { width: 6px; height: 6px; background: var(--azul-cintilante); border-radius: 50%; display: inline-block; box-shadow: 0 0 6px var(--azul-cintilante); }
+  .post-card.featured .cat-dot { background: var(--vermelho-cintilante); box-shadow: 0 0 6px var(--vermelho-cintilante); }
+
+  .post-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem; line-height: 1.35; font-weight: 700; margin-bottom: 14px; color: var(--branco);
+  }
+  .post-card.featured .post-title { font-size: 1.8rem; }
+  .post-excerpt { font-size: 0.88rem; line-height: 1.7; color: rgba(244,244,248,0.55); margin-bottom: 20px; }
+  .post-meta { display: flex; align-items: center; gap: 12px; font-size: 0.75rem; color: var(--cinza); }
+  .read-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.78rem; font-weight: 500;
+    color: var(--azul-cintilante); text-decoration: none; margin-top: 20px;
+    text-transform: uppercase; letter-spacing: 0.1em; transition: gap 0.2s, color 0.2s;
+  }
+  .read-link:hover { gap: 10px; color: var(--vermelho-cintilante); }
+
+  /* ===== POESIAS SECTION ===== */
+  .poesias-section {
+    padding: 80px 5vw;
+    border-top: 1px solid transparent;
+    border-image: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante)) 1;
+  }
+  .poesias-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px; margin-top: 40px;
+  }
+  .poesia-card {
+    background: var(--preto-card);
+    padding: 36px 28px; position: relative; cursor: pointer;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    transition: transform 0.3s, box-shadow 0.3s;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .poesia-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 1px; padding: 1px;
+    background: linear-gradient(135deg, rgba(26,111,255,0.3), rgba(238,0,0,0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    transition: background 0.3s;
+  }
+  .poesia-card:hover::before {
+    background: linear-gradient(135deg, var(--azul-cintilante), var(--vermelho-cintilante));
+  }
+  .poesia-card.visible { opacity: 1; transform: translateY(0); }
+  .poesia-opening {
+    font-family: 'Playfair Display', serif; font-size: 1.1rem;
+    font-style: italic; line-height: 1.8; color: rgba(244,244,248,0.82);
+    margin-bottom: 20px;
+  }
+  .poesia-opening::before {
+    content: '"';
+    font-size: 3rem; color: rgba(26,111,255,0.2);
+    font-family: 'Playfair Display', serif;
+    display: block; line-height: 1; margin-bottom: 8px;
+  }
+  .poesia-author { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--azul-cintilante); }
+  .poesia-meta { font-size: 0.72rem; color: rgba(244,244,248,0.3); margin-top: 4px; }
+
+  /* ===== POSTS LIST ===== */
+  .posts-list { display: flex; flex-direction: column; }
+  .post-list-item {
+    display: grid; grid-template-columns: 80px 1fr auto;
+    gap: 24px; align-items: start; padding: 32px 0;
+    border-bottom: 1px solid rgba(26,111,255,0.1);
+    cursor: pointer; opacity: 0; transform: translateX(-20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .post-list-item.visible { opacity: 1; transform: translateX(0); }
+  .post-list-item:hover .pli-title { color: var(--azul-cintilante); }
+  .pli-number { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: rgba(244,244,248,0.06); font-weight: 700; line-height: 1; }
+  .pli-cat { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: var(--vermelho-cintilante); margin-bottom: 8px; }
+  .pli-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; line-height: 1.35; margin-bottom: 8px; transition: color 0.2s; color: var(--branco); }
+  .pli-excerpt { font-size: 0.85rem; color: rgba(244,244,248,0.5); line-height: 1.6; }
+  .pli-meta { font-size: 0.75rem; color: var(--cinza); white-space: nowrap; }
+
+  /* ===== FILTROS ===== */
+  .filter-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 40px; }
+  .filter-btn {
+    font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em;
+    padding: 8px 18px;
+    background: transparent; cursor: pointer; transition: all 0.2s; border-radius: 1px;
+    color: rgba(244,244,248,0.6);
+    border: 1px solid rgba(26,111,255,0.2);
+  }
+  .filter-btn:hover { background: rgba(26,111,255,0.08); color: var(--azul-cintilante); border-color: var(--azul-cintilante); }
+  .filter-btn.active { background: rgba(238,0,0,0.08); color: var(--vermelho-cintilante); border-color: var(--vermelho-cintilante); }
+
+  /* ===== EQUIPE ===== */
+  .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .team-card { text-align: center; opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .team-card.visible { opacity: 1; transform: translateY(0); }
+  .team-avatar {
+    width: 88px; height: 88px; border-radius: 50%;
+    margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--branco);
+    position: relative;
+  }
+  /* gradient border on avatar */
+  .team-avatar::after {
+    content: '';
+    position: absolute; inset: -1px; border-radius: 50%;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--azul-cintilante), var(--vermelho-cintilante));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    animation: border-glow 4s ease-in-out infinite;
+  }
+  .team-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; color: var(--branco); }
+  .team-role { font-size: 0.78rem; color: var(--cinza); text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* ===== SOCIAL ===== */
+  .social-bar {
+    background: var(--vermelho);
+    padding: 32px 5vw; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+    border-top: 1px solid transparent; border-bottom: 1px solid transparent;
+    border-image: linear-gradient(90deg, var(--azul-cintilante), var(--vermelho-cintilante)) 1;
+    position: relative; overflow: hidden;
+    animation: shimmer-red 4s ease-in-out infinite;
+  }
+  .social-bar::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(10,75,219,0.2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .social-label { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: white; font-style: italic; }
+  .social-links { display: flex; gap: 16px; }
+  .social-link {
+    width: 44px; height: 44px; background: rgba(255,255,255,0.12); color: white;
+    display: flex; align-items: center; justify-content: center; text-decoration: none;
+    font-weight: 700; font-size: 0.7rem; letter-spacing: 0.05em;
+    transition: background 0.2s, transform 0.2s; border-radius: 1px;
+    border: 1px solid rgba(26,111,255,0.4);
+  }
+  .social-link:hover { background: rgba(255,255,255,0.25); transform: translateY(-3px); border-color: var(--azul-cintilante); }
+
+  footer {
+    background: var(--preto); color: rgba(244,244,248,0.35);
+    padding: 40px 5vw; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; font-size: 0.78rem;
+    border-top: 1px solid rgba(26,111,255,0.15);
+  }
+  .footer-logo { font-family: 'Playfair Display', serif; color: var(--branco); font-size: 1.1rem; font-weight: 700; }
+  .footer-logo .fa { color: var(--azul-cintilante); animation: shimmer-blue 3s ease-in-out infinite; }
+  .footer-logo .fb { color: var(--vermelho-cintilante); animation: shimmer-red 3s ease-in-out infinite; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 200;
+    display: flex; align-items: flex-start; justify-content: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.4s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-panel {
+    width: min(560px, 100vw); height: 100vh;
+    background: var(--preto-card); overflow-y: auto; padding: 48px 40px;
+    transform: translateX(100%); transition: transform 0.5s cubic-bezier(.16,1,.3,1);
+    border-left: 1px solid transparent;
+    border-image: linear-gradient(180deg, var(--azul-cintilante), var(--vermelho-cintilante)) 1;
+  }
+  .modal-overlay.open .modal-panel { transform: translateX(0); }
+  .modal-close {
+    position: absolute; top: 24px; right: 32px; font-size: 1.5rem; cursor: pointer;
+    color: var(--cinza); background: none; border: none; transition: color 0.2s, transform 0.2s;
+  }
+  .modal-close:hover { color: var(--vermelho-cintilante); transform: rotate(90deg); }
+  .modal-cat { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: var(--azul-cintilante); margin-bottom: 12px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; line-height: 1.25; margin-bottom: 16px; color: var(--branco); }
+  .modal-meta { font-size: 0.78rem; color: var(--cinza); margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid rgba(26,111,255,0.15); }
+  .modal-body { font-size: 0.95rem; line-height: 1.85; color: rgba(244,244,248,0.75); }
+  .modal-body p { margin-bottom: 16px; }
+  .modal-author-block {
+    margin-top: 40px; padding-top: 28px; border-top: 1px solid rgba(26,111,255,0.15);
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .modal-author-avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 1.1rem; flex-shrink: 0; border: 1px solid var(--azul-cintilante); }
+  .modal-author-name { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; color: var(--branco); }
+  .modal-author-bio { font-size: 0.82rem; color: rgba(244,244,248,0.55); line-height: 1.5; }
+  .modal-comments { margin-top: 40px; }
+  .modal-comments h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 16px; color: var(--branco); }
+  .comment-input {
+    width: 100%; border: 1px solid rgba(26,111,255,0.2); padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; border-radius: 1px;
+    margin-bottom: 12px; resize: vertical; min-height: 80px;
+    background: rgba(255,255,255,0.04); color: var(--branco); transition: border-color 0.2s;
+  }
+  .comment-input::placeholder { color: rgba(244,244,248,0.3); }
+  .comment-input:focus { outline: none; border-color: var(--azul-cintilante); }
+  .comment-send {
+    background: rgba(10,75,219,0.15); color: var(--azul-cintilante);
+    border: 1px solid var(--azul-cintilante); padding: 10px 24px;
+    font-size: 0.78rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .comment-send:hover { background: rgba(10,75,219,0.3); }
+  .comments-list { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .comment-item { padding: 14px; background: rgba(255,255,255,0.03); border-left: 2px solid var(--azul-cintilante); }
+  .comment-user { font-weight: 600; font-size: 0.82rem; margin-bottom: 4px; color: var(--azul-cintilante); }
+  .comment-text { font-size: 0.85rem; color: rgba(244,244,248,0.6); line-height: 1.5; }
+  .nav-mobile { display: none; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 2rem; min-height: auto; }
+    .hero-visual { display: none; }
+    .posts-grid { grid-template-columns: 1fr; }
+    .post-card.featured { grid-column: span 1; }
+    .team-grid { grid-template-columns: repeat(2, 1fr); }
+    nav { display: none; }
+    .hamburger { display: flex; }
+    .poesias-grid { grid-template-columns: 1fr; }
+    .nav-mobile {
+      display: none; position: fixed; top: 64px; left: 0; right: 0;
+      background: var(--preto); border-bottom: 1px solid rgba(26,111,255,0.3);
+      padding: 20px 5vw; flex-direction: column; gap: 16px; z-index: 99;
+    }
+    .nav-mobile.open { display: flex; }
+    .nav-mobile a { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; text-decoration: none; color: var(--branco); }
+    .post-list-item { grid-template-columns: 1fr; gap: 8px; }
+    .pli-number { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== CORTINAS ===== -->
+<div id="curtain-screen" onclick="openCurtains()">
+  <div class="curtain curtain-left">
+    <div class="curtain-fabric"></div>
+  </div>
+  <div class="curtain curtain-right">
+    <div class="curtain-fabric"></div>
+  </div>
+
+  <div class="curtain-title">
+    <h2>Filtro Azul</h2>
+  </div>
+
+  <div class="curtain-hint">
+    <p>Clique para abrir</p>
+    <span>✦ revista literária digital ✦</span>
+  </div>
+</div>
+
+<!-- ===== LOADER ===== -->
+<div id="loader">
+  <div style="text-align:center">
+    <div class="loader-text"><span>Filtro</span> <span>Azul</span></div>
+    <div class="loader-underline"></div>
+  </div>
+</div>
+
+<header id="header">
+  <a href="#" class="logo">
+    <span class="logo-filtro">Filtro</span>&nbsp;<span class="logo-azul">Azul</span>
+  </a>
+  <nav id="main-nav">
+    <a href="#literatura" class="active" onclick="setActive(this)">Literatura</a>
+    <a href="#poesias" onclick="setActive(this)">Poesias</a>
+    <a href="#contato" onclick="setActive(this)">Redes Sociais</a>
+    <a href="#equipe" onclick="setActive(this)">Equipe</a>
+  </nav>
+  <div class="hamburger" onclick="toggleMobile()"><span></span><span></span><span></span></div>
+</header>
+<div class="nav-mobile" id="nav-mobile">
+  <a href="#literatura">Literatura</a>
+  <a href="#poesias">Poesias</a>
+  <a href="#contato">Redes Sociais</a>
+  <a href="#equipe">Equipe</a>
+</div>
+
+<section class="hero" id="hero">
+  <div>
+    <div class="hero-tag">Revista Literária Digital</div>
+    <h1>Onde a arte<br>encontra o <span class="h-vermelho">ruído</span><br>do <span class="h-azul">mundo</span></h1>
+    <p class="hero-desc">Filtro Azul é um espaço de curadoria literária, poesia e audiovisual. Uma revista para quem não tem medo de sentir.</p>
+    <button class="hero-btn" onclick="scrollToEl('#literatura')">
+      Explorar
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-img-frame">
+      <div class="hero-img-frame-inner">
+        <p class="hero-quote">"A poesia é o eco de uma melodia que nunca existiu."</p>
+        <div class="hero-quote-line"></div>
+      </div>
+    </div>
+    <div class="hero-badge">Nova edição</div>
+  </div>
+</section>
+
+<section class="section" id="literatura">
+  <div class="section-title">Literatura</div>
+  <p class="section-subtitle">Ensaios, crítica e ficção contemporânea</p>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterPosts('all', this)">Todos</button>
+    <button class="filter-btn" onclick="filterPosts('literatura', this)">Literatura</button>
+    <button class="filter-btn" onclick="filterPosts('poesia', this)">Poesia</button>
+  </div>
+  <div class="posts-grid" id="posts-grid">
+    <div class="post-card featured" data-cat="literatura" onclick="openModal(0)">
+      <div class="post-category"><span class="cat-dot"></span> Literatura</div>
+      <h2 class="post-title">O feminismo não é wokismo</h2>
+      <p class="post-excerpt">Nas últimas semanas, o caso Epstein voltou ao centro da cena mundial como uma radiografia da economia política da impunidade. Uma rede de exploração sexual incrustada nas elites.</p>
+      <div class="post-meta"><span>24 mar 2026</span><span>·</span><span>8 min de leitura</span></div>
+      <a href="#" class="read-link" onclick="event.preventDefault();openModal(0)">Ler matéria →</a>
+    </div>
+    <div class="post-card" data-cat="literatura" onclick="openModal(1)">
+      <div class="post-category"><span class="cat-dot"></span> Ensaio</div>
+      <h2 class="post-title">Socialismo após a Inteligência Artificial</h2>
+      <p class="post-excerpt">A IA produziu um tipo raro de curiosidade popular. Não apenas entre investidores e fundadores.</p>
+      <div class="post-meta"><span>23 mar 2026</span> · <span>6 min</span></div>
+      <a href="#" class="read-link" onclick="event.preventDefault();openModal(1)">Ler matéria →</a>
+    </div>
+    <div class="post-card" data-cat="poesia" onclick="openModal(2)">
+      <div class="post-category"><span class="cat-dot"></span> Poesia · Tradução</div>
+      <h2 class="post-title">Três poemas de Gregory Zambrano</h2>
+      <p class="post-excerpt">Com curadoria e tradução de Gladys Mendía. Gregory Zambrano (1963, Venezuela).</p>
+      <div class="post-meta"><span>22 mar 2026</span> · <span>5 min</span></div>
+      <a href="#" class="read-link" onclick="event.preventDefault();openModal(2)">Ler matéria →</a>
+    </div>
+    <div class="post-card" data-cat="literatura" onclick="openModal(3)">
+      <div class="post-category"><span class="cat-dot"></span> Crítica</div>
+      <h2 class="post-title">Cartas ao fim do mundo</h2>
+      <p class="post-excerpt">Uma resenha do romance que sacudiu os festivais literários deste ano.</p>
+      <div class="post-meta"><span>18 mar 2026</span> · <span>4 min</span></div>
+      <a href="#" class="read-link" onclick="event.preventDefault();openModal(3)">Ler matéria →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== POESIAS ===== -->
+<section class="poesias-section" id="poesias">
+  <div class="section-title">Poesias</div>
+  <p class="section-subtitle">Vozes que atravessam o silêncio</p>
+  <div class="poesias-grid" id="poesias-grid">
+    <div class="poesia-card" onclick="openPoesiaModal(0)">
+      <div class="poesia-opening">Há cinzas na boca do rio<br>e o vento não sabe para onde vai.<br>Estou aqui, entre pedras,<br>aprendendo a ser ausência.</div>
+      <div class="poesia-author">Gregory Zambrano</div>
+      <div class="poesia-meta">Curadoria: Gladys Mendía · 2026</div>
+    </div>
+    <div class="poesia-card" onclick="openPoesiaModal(1)">
+      <div class="poesia-opening">A memória é uma casa<br>que só se entra de costas.<br>Cada porta que se abre<br>fecha outra que foi amor.</div>
+      <div class="poesia-author">Gregory Zambrano</div>
+      <div class="poesia-meta">Curadoria: Gladys Mendía · 2026</div>
+    </div>
+    <div class="poesia-card" onclick="openPoesiaModal(2)">
+      <div class="poesia-opening">Escrevo com a mão esquerda<br>para não assustar as palavras.<br>Elas sabem quando tenho pressa<br>e se calam.</div>
+      <div class="poesia-author">Nina Maria</div>
+      <div class="poesia-meta">Filtro Azul · 2026</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="equipe" style="border-top: 1px solid rgba(26,111,255,0.12);">
+  <div class="section-title">Equipe</div>
+  <p class="section-subtitle">As pessoas por trás do Filtro Azul</p>
+  <div class="team-grid">
+    <div class="team-card"><div class="team-avatar" style="background:rgba(10,75,219,0.3);">NM</div><div class="team-name">Nina Maria</div><div class="team-role">Editora & Curadora</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:rgba(204,0,0,0.3);">GM</div><div class="team-name">Gladys Mendía</div><div class="team-role">Tradução & Poesia</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:rgba(26,111,255,0.2);">RC</div><div class="team-name">Rafael Corrêa</div><div class="team-role">Audiovisual</div></div>
+    <div class="team-card"><div class="team-avatar" style="background:rgba(238,0,0,0.2);">LA</div><div class="team-name">Lara Andrade</div><div class="team-role">Design Artístico</div></div>
+  </div>
+</section>
+
+<div class="social-bar" id="contato">
+  <p class="social-label">Nos encontre no Instagram ✦ @filtroazul</p>
+  <div class="social-links">
+    <a href="https://instagram.com/filtroazul" target="_blank" class="social-link" title="Instagram">IG</a>
+    <a href="#" class="social-link" title="YouTube">YT</a>
+    <a href="#" class="social-link" title="Spotify">SP</a>
+    <a href="#" class="social-link" title="E-mail">✉</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo"><span class="fa">Filtro</span> <span class="fb">Azul</span></div>
+  <div>© 2026 Filtro Azul · Revista Literária Digital · Todos os direitos reservados</div>
+</footer>
+
+<!-- Modal posts -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <button class="modal-close" onclick="closeModal()">✕</button>
+  <div class="modal-panel" id="modal-panel">
+    <div class="modal-cat" id="modal-cat"></div>
+    <h2 class="modal-title" id="modal-title"></h2>
+    <div class="modal-meta" id="modal-meta"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-author-block" id="modal-author-block"></div>
+    <div class="modal-comments">
+      <h3>Deixe uma resposta</h3>
+      <textarea class="comment-input" placeholder="Seu comentário..." id="comment-input"></textarea>
+      <button class="comment-send" onclick="addComment()">Enviar comentário</button>
+      <div class="comments-list" id="comments-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal poesias -->
+<div class="modal-overlay" id="modal-poesia" onclick="closePoesiaOutside(event)">
+  <button class="modal-close" onclick="closePoesiaModal()">✕</button>
+  <div class="modal-panel" id="modal-poesia-panel">
+    <div class="modal-cat" id="mp-cat"></div>
+    <h2 class="modal-title" id="mp-title"></h2>
+    <div class="modal-meta" id="mp-meta"></div>
+    <div class="modal-body" id="mp-body" style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.15rem;line-height:2;"></div>
+    <div class="modal-author-block" id="mp-author"></div>
+  </div>
+</div>
+
+<script>
+/* ===== CORTINAS ===== */
+function openCurtains() {
+  var sc = document.getElementById('curtain-screen');
+  sc.classList.add('opened');
+  setTimeout(function() {
+    sc.style.display = 'none';
+    // mostrar loader depois
+    setTimeout(function() {
+      document.getElementById('loader').classList.add('hide');
+      document.getElementById('hero').classList.add('visible');
+    }, 900);
+  }, 1900);
+}
+
+/* ===== POSTS DATA ===== */
+var posts = [
+  { cat:'Literatura', title:'O feminismo não é wokismo', date:'24 de março de 2026', readTime:'8 min de leitura', author:'Nina Maria', authorInitials:'NM', authorColor:'#0A4BDB', authorBio:'Nina Maria (@poeticamenteeu_) é brasileira, natural de Santo Estêvão/Bahia. Nascida no ano 2000. É mulher preta e autista. Poeta, escritora, produtora cultural. Atua como editora e curadora literária internacional na Revista Ruído Manifesto.', body:'<p>Nas últimas semanas, o caso Epstein voltou ao centro da cena mundial como uma radiografia da economia política da impunidade. Uma rede de exploração sexual incrustada nas elites, sustentada por dinheiro, silêncio e cumplicidade institucional.</p><p>O feminismo, como movimento político, sempre apontou para a estrutura. Não se trata de moralismo, mas de análise: quem tem poder, quem é protegido, quem é sacrificado. O rótulo "wokismo" é uma tentativa de deslegitimar o que é, na verdade, lucidez política.</p><p>Quando se diz que uma pauta é "ideológica", é preciso perguntar: em oposição a quê? Toda posição é ideológica. A naturalização da violência também o é. O que o feminismo faz é nomear o que está normalizado.</p>', comments:[] },
+  { cat:'Ensaio', title:'Socialismo após a Inteligência Artificial', date:'23 de março de 2026', readTime:'6 min de leitura', author:'Evgeny Morozov (trad.)', authorInitials:'EM', authorColor:'#CC0000', authorBio:'Por Evgeny Morozov. Tradução para o Filtro Azul.', body:'<p>A Inteligência Artificial produziu um tipo raro de curiosidade popular. Não apenas entre investidores e fundadores, mas entre pessoas que abrem o navegador, digitam uma pergunta e ficam genuinamente surpresas com a resposta.</p><p>Essa curiosidade é matéria-prima política. Pode virar fatalismo — "as máquinas tomarão tudo" — ou pode se transformar em pergunta: a quem serve essa automação? Quem acumula o valor que ela gera?</p><p>A esquerda tem a oportunidade histórica de oferecer uma resposta à altura. Não reacionária (proibir a IA) nem ingênua (acreditar que ela é neutra), mas estrutural: o controle coletivo dos meios de produção digital.</p>', comments:[] },
+  { cat:'Poesia · Tradução', title:'Três poemas de Gregory Zambrano', date:'22 de março de 2026', readTime:'5 min de leitura', author:'Gladys Mendía', authorInitials:'GM', authorColor:'#0A4BDB', authorBio:'Gladys Mendía é curadora e tradutora. Colabora com a Revista Filtro Azul na seleção e tradução de poesia latino-americana contemporânea.', body:'<p><em>Gregory Zambrano (1963, Venezuela).</em></p><p style="margin-top:24px;font-style:italic;line-height:2;font-size:1.05rem;">I.<br>Há cinzas na boca do rio<br>e o vento não sabe para onde vai.<br>Estou aqui, entre pedras,<br>aprendendo a ser ausência.</p><p style="font-style:italic;line-height:2;font-size:1.05rem;">II.<br>A memória é uma casa<br>que só se entra de costas.<br>Cada porta que se abre<br>fecha outra que foi amor.</p>', comments:[] },
+  { cat:'Crítica Literária', title:'Cartas ao fim do mundo', date:'18 de março de 2026', readTime:'4 min de leitura', author:'Nina Maria', authorInitials:'NM', authorColor:'#CC0000', authorBio:'Nina Maria é editora e curadora literária internacional na Revista Filtro Azul.', body:'<p>O romance chega com a urgência de quem sabe que está escrevendo em cima do prazo. Não o prazo editorial — o prazo da civilização.</p><p>Cada carta é um mundo. A personagem escreve para pessoas que talvez não existam mais, e nessa incerteza mora toda a tensão do livro. Quem são os destinatários de uma escrita que nasce sabendo que pode não ser lida?</p><p>A resposta que o romance oferece é simples e devastadora: escrever é um ato de fé. Em alguém. Em algum futuro.</p>', comments:[] }
+];
+
+var poesias = [
+  { cat:'Poesia', title:'I. Cinzas', date:'22 de março de 2026', author:'Gregory Zambrano', authorInitials:'GZ', authorColor:'#0A4BDB', authorBio:'Gregory Zambrano (1963, Venezuela). Curadoria e tradução por Gladys Mendía.', text:'Há cinzas na boca do rio\ne o vento não sabe para onde vai.\nEstou aqui, entre pedras,\naprendendo a ser ausência.' },
+  { cat:'Poesia', title:'II. A Casa da Memória', date:'22 de março de 2026', author:'Gregory Zambrano', authorInitials:'GZ', authorColor:'#0A4BDB', authorBio:'Gregory Zambrano (1963, Venezuela). Curadoria e tradução por Gladys Mendía.', text:'A memória é uma casa\nque só se entra de costas.\nCada porta que se abre\nfecha outra que foi amor.' },
+  { cat:'Poesia', title:'Escrita com a mão esquerda', date:'2026', author:'Nina Maria', authorInitials:'NM', authorColor:'#CC0000', authorBio:'Nina Maria é poeta, escritora e produtora cultural. Editora da Revista Filtro Azul.', text:'Escrevo com a mão esquerda\npara não assustar as palavras.\nElas sabem quando tenho pressa\ne se calam.' }
+];
+
+function openModal(idx) {
+  var p = posts[idx];
+  document.getElementById('modal-cat').textContent = p.cat;
+  document.getElementById('modal-title').textContent = p.title;
+  document.getElementById('modal-meta').textContent = p.date + ' · ' + p.readTime;
+  document.getElementById('modal-body').innerHTML = p.body;
+  document.getElementById('modal-author-block').innerHTML = '<div class="modal-author-avatar" style="background:'+p.authorColor+'">'+p.authorInitials+'</div><div><div class="modal-author-name">'+p.author+'</div><div class="modal-author-bio">'+p.authorBio+'</div></div>';
+  var cl = document.getElementById('comments-list');
+  cl.innerHTML = '';
+  p.comments.forEach(function(c) { cl.innerHTML += '<div class="comment-item"><div class="comment-user">'+c.user+'</div><div class="comment-text">'+c.text+'</div></div>'; });
+  document.getElementById('modal').setAttribute('data-idx', idx);
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); document.body.style.overflow=''; }
+function closeModalOutside(e) { if(e.target===document.getElementById('modal')) closeModal(); }
+function addComment() {
+  var inp = document.getElementById('comment-input');
+  var text = inp.value.trim(); if(!text) return;
+  var idx = +document.getElementById('modal').getAttribute('data-idx');
+  posts[idx].comments.push({ user:'Leitor(a)', text:text });
+  inp.value = '';
+  var cl = document.getElementById('comments-list');
+  var item = document.createElement('div');
+  item.className = 'comment-item'; item.style.opacity='0'; item.style.transform='translateY(10px)';
+  item.innerHTML = '<div class="comment-user">Leitor(a)</div><div class="comment-text">'+text+'</div>';
+  cl.appendChild(item);
+  requestAnimationFrame(function(){ item.style.transition='opacity 0.4s,transform 0.4s'; item.style.opacity='1'; item.style.transform='translateY(0)'; });
+}
+
+function openPoesiaModal(idx) {
+  var p = poesias[idx];
+  document.getElementById('mp-cat').textContent = p.cat;
+  document.getElementById('mp-title').textContent = p.title;
+  document.getElementById('mp-meta').textContent = p.date;
+  document.getElementById('mp-body').innerHTML = p.text.split('\n').join('<br>');
+  document.getElementById('mp-author').innerHTML = '<div class="modal-author-avatar" style="background:'+p.authorColor+'">'+p.authorInitials+'</div><div><div class="modal-author-name">'+p.author+'</div><div class="modal-author-bio">'+p.authorBio+'</div></div>';
+  document.getElementById('modal-poesia').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePoesiaModal() { document.getElementById('modal-poesia').classList.remove('open'); document.body.style.overflow=''; }
+function closePoesiaOutside(e) { if(e.target===document.getElementById('modal-poesia')) closePoesiaModal(); }
+
+function filterPosts(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelectorAll('.post-card').forEach(function(card){
+    var c = card.getAttribute('data-cat')||'';
+    var show = cat==='all'||c===cat;
+    card.style.opacity = show?'1':'0.2';
+    card.style.pointerEvents = show?'auto':'none';
+  });
+}
+function setActive(el) { document.querySelectorAll('nav a').forEach(function(a){a.classList.remove('active');}); el.classList.add('active'); }
+function toggleMobile() { document.getElementById('nav-mobile').classList.toggle('open'); }
+function scrollToEl(id) { var el=document.querySelector(id); if(el) el.scrollIntoView({behavior:'smooth'}); }
+
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if(e.isIntersecting) setTimeout(function(){e.target.classList.add('visible');},100);
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.post-card,.post-list-item,.team-card,.poesia-card').forEach(function(el){observer.observe(el);});
+document.querySelectorAll('.post-card').forEach(function(c,i){c.style.transitionDelay=(i*0.08)+'s';});
+document.querySelectorAll('.post-list-item').forEach(function(c,i){c.style.transitionDelay=(i*0.1)+'s';});
+document.querySelectorAll('.team-card').forEach(function(c,i){c.style.transitionDelay=(i*0.1)+'s';});
+document.querySelectorAll('.poesia-card').forEach(function(c,i){c.style.transitionDelay=(i*0.1)+'s';});
+
+// Loader escondido imediatamente (cortinas são a intro)
+document.getElementById('loader').classList.add('hide');
+</script>
+</body>
+</html>
