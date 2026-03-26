@@ -38,6 +38,10 @@
     0%,100% { box-shadow: 0 0 8px rgba(26,111,255,0.10), 0 0 18px rgba(238,0,0,0.08); }
     50% { box-shadow: 0 0 16px rgba(26,111,255,0.18), 0 0 28px rgba(238,0,0,0.16); }
   }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   header {
     position: sticky;
@@ -63,7 +67,7 @@
     gap: 8px;
   }
   .logo-filtro { color: var(--vermelho-cintilante); animation: shimmer-red 3s ease-in-out infinite; }
-  .logo-azul { color: var(--azul-cintilante); animation: shimmer-blue 3s ease-in-out infinite; }
+  .logo-azul   { color: var(--azul-cintilante);     animation: shimmer-blue 3s ease-in-out infinite; }
 
   nav {
     display: flex;
@@ -93,11 +97,13 @@
   nav a:hover,
   nav a.active { color: var(--branco); }
 
+  /* ── HERO ── */
   .page-hero {
-    padding: 90px 5vw 40px;
+    padding: 90px 5vw 48px;
     text-align: center;
     position: relative;
     overflow: hidden;
+    animation: fadeUp 0.7s ease both;
   }
   .page-hero::before {
     content: '';
@@ -133,6 +139,7 @@
     font-size: 1rem;
   }
 
+  /* ── SECTION ── */
   .section {
     padding: 36px 5vw 80px;
   }
@@ -159,61 +166,139 @@
     max-width: 720px;
   }
 
+  /* ── DIVISOR DE GRUPO ── */
+  .group-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+    margin-top: 48px;
+  }
+  .group-label:first-of-type { margin-top: 0; }
+  .group-label span {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--cinza);
+    white-space: nowrap;
+  }
+  .group-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.07);
+  }
+
+  /* ── GRIDS ── */
   .team-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
+    gap: 22px;
   }
+  .team-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+  }
+
+  /* ── CARD ── */
   .team-card {
     background: linear-gradient(180deg, rgba(9,17,31,0.94), rgba(7,12,24,0.96));
     border: 1px solid rgba(255,255,255,0.06);
-    padding: 30px 24px;
+    padding: 28px 22px 24px;
     text-align: center;
     animation: border-glow 5s ease-in-out infinite;
+    transition: transform 0.22s ease, border-color 0.22s ease;
+    position: relative;
+    overflow: hidden;
   }
+  .team-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(26,111,255,0.04), transparent 60%);
+    pointer-events: none;
+  }
+  .team-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(26,111,255,0.18);
+  }
+
   .team-avatar {
-    width: 92px;
-    height: 92px;
+    width: 88px;
+    height: 88px;
     border-radius: 50%;
     margin: 0 auto 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Playfair Display', serif;
-    font-size: 1.55rem;
+    font-size: 1.45rem;
     font-weight: 700;
     color: var(--branco);
     border: 1px solid rgba(255,255,255,0.12);
+    position: relative;
   }
-  .team-name {
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 6px;
-  }
-  .team-role {
-    font-size: 0.78rem;
-    color: var(--cinza);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 10px;
-  }
-  .team-desc {
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: rgba(244,244,248,0.72);
+  .team-avatar::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1px solid rgba(26,111,255,0.15);
   }
 
+  .team-name {
+    font-weight: 700;
+    font-size: 0.97rem;
+    margin-bottom: 5px;
+    letter-spacing: 0.01em;
+  }
+  .team-role {
+    font-size: 0.74rem;
+    color: var(--azul-cintilante);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 11px;
+    opacity: 0.85;
+  }
+  .team-desc {
+    font-size: 0.87rem;
+    line-height: 1.75;
+    color: rgba(244,244,248,0.65);
+  }
+
+  /* destaque vermelho para grupo editorial */
+  .card-red .team-role { color: var(--vermelho-cintilante); }
+  .card-red::before {
+    background: linear-gradient(135deg, rgba(201,25,25,0.05), transparent 60%);
+  }
+  .card-red:hover {
+    border-color: rgba(201,25,25,0.18);
+  }
+
+  /* ── CONTATO ── */
   .contact-card {
-    margin-top: 52px;
+    margin-top: 58px;
     background: linear-gradient(180deg, rgba(9,17,31,0.94), rgba(7,12,24,0.96));
     border: 1px solid rgba(255,255,255,0.06);
-    padding: 34px 30px;
+    padding: 36px 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
     flex-wrap: wrap;
     animation: border-glow 5s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 0% 100%, rgba(26,111,255,0.06), transparent 40%),
+      radial-gradient(circle at 100% 0%,  rgba(201,25,25,0.06), transparent 40%);
+    pointer-events: none;
   }
 
   .contact-copy h3 {
@@ -223,8 +308,9 @@
   }
   .contact-copy p {
     color: rgba(244,244,248,0.72);
-    line-height: 1.8;
-    max-width: 700px;
+    line-height: 1.85;
+    max-width: 680px;
+    font-size: 0.95rem;
   }
 
   .contact-links {
@@ -234,8 +320,8 @@
   }
 
   .contact-link {
-    min-width: 160px;
-    height: 48px;
+    min-width: 150px;
+    height: 46px;
     padding: 0 20px;
     display: inline-flex;
     align-items: center;
@@ -244,7 +330,7 @@
     color: var(--branco);
     border: 1px solid rgba(255,255,255,0.14);
     background: transparent;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     transition: 0.25s ease;
@@ -253,6 +339,14 @@
     background: rgba(26,111,255,0.08);
     border-color: rgba(26,111,255,0.35);
     transform: translateY(-2px);
+  }
+  .contact-link.primary {
+    background: rgba(26,111,255,0.10);
+    border-color: rgba(26,111,255,0.3);
+  }
+  .contact-link.primary:hover {
+    background: rgba(26,111,255,0.18);
+    border-color: rgba(26,111,255,0.55);
   }
 
   footer {
@@ -276,20 +370,15 @@
   .footer-logo .fa { color: var(--vermelho-cintilante); }
   .footer-logo .fb { color: var(--azul-cintilante); }
 
-  @media (max-width: 980px) {
-    .team-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
+  @media (max-width: 1080px) {
+    .team-grid,
+    .team-grid-2 { grid-template-columns: repeat(2, 1fr); }
   }
-
   @media (max-width: 680px) {
     nav { gap: 1rem; }
-    .team-grid {
-      grid-template-columns: 1fr;
-    }
-    .contact-card {
-      padding: 26px 20px;
-    }
+    .team-grid,
+    .team-grid-2 { grid-template-columns: 1fr; }
+    .contact-card { padding: 26px 20px; }
   }
 </style>
 </head>
@@ -299,7 +388,6 @@
   <a href="index.html" class="logo">
     <span class="logo-filtro">Filtro</span>&nbsp;<span class="logo-azul">Azul</span>
   </a>
-
   <nav>
     <a href="index.html">Editorial</a>
     <a href="index.html#poesias">Poesias</a>
@@ -311,44 +399,47 @@
   <div class="page-tag">Filtro Azul</div>
   <h1>Equipe & contato</h1>
   <p>
-    Uma página separada para reunir quem constrói o projeto e os caminhos para chegar até o universo do Filtro Azul.
+    As pessoas que constroem o projeto — da palavra à imagem, da estratégia ao design — e os caminhos para chegar até o universo do Filtro Azul.
   </p>
 </section>
 
 <section class="section">
+
+  <!-- AGÊNCIA CONGO -->
   <div class="section-title">Equipe</div>
   <p class="section-subtitle">As pessoas por trás do Filtro Azul.</p>
 
-  <div class="team-grid">
+  <div class="team-grid-2">
     <div class="team-card">
-      <div class="team-avatar" style="background:rgba(10,75,219,0.3);">NM</div>
-      <div class="team-name">Nina Maria</div>
-      <div class="team-role">Editora & Curadora</div>
-      <div class="team-desc">Responsável pela condução editorial e pela curadoria sensível do universo poético do projeto.</div>
+      <div class="team-avatar" style="background:rgba(26,111,255,0.28);">HC</div>
+      <div class="team-name">Hiago Coelho</div>
+      <div class="team-role">Fotografia</div>
+      <div class="team-desc">Responsável pelas fotos produzidas para compor o blog, capturando a atmosfera visual do projeto.</div>
     </div>
 
     <div class="team-card">
-      <div class="team-avatar" style="background:rgba(204,0,0,0.3);">GM</div>
-      <div class="team-name">Gladys Mendía</div>
-      <div class="team-role">Tradução & Poesia</div>
-      <div class="team-desc">Contribui com traduções, diálogos literários e pontes com outras vozes poéticas.</div>
+      <div class="team-avatar" style="background:rgba(10,75,219,0.30);">LZ</div>
+      <div class="team-name">Lucas Zanetti</div>
+      <div class="team-role">Social Mídia & Edição</div>
+      <div class="team-desc">Cuida das redes sociais do projeto e edita os produtos criados para o Instagram.</div>
+    </div>
+
+    <div class="team-card card-red">
+      <div class="team-avatar" style="background:rgba(201,25,25,0.26);">MM</div>
+      <div class="team-name">Marcela Monteiro</div>
+      <div class="team-role">Redação & Estratégia</div>
+      <div class="team-desc">Redatora das poesias e roteiros para o Instagram e criadora da estratégia geral do projeto.</div>
     </div>
 
     <div class="team-card">
-      <div class="team-avatar" style="background:rgba(26,111,255,0.2);">RC</div>
-      <div class="team-name">Rafael Corrêa</div>
-      <div class="team-role">Colaboração Editorial</div>
-      <div class="team-desc">Apoia a construção textual, conceitual e a organização da presença digital do projeto.</div>
-    </div>
-
-    <div class="team-card">
-      <div class="team-avatar" style="background:rgba(238,0,0,0.2);">LA</div>
-      <div class="team-name">Lara Andrade</div>
-      <div class="team-role">Design Artístico</div>
-      <div class="team-desc">Assina o cuidado visual, a atmosfera e o acabamento artístico da experiência.</div>
+      <div class="team-avatar" style="background:rgba(26,111,255,0.20);">SA</div>
+      <div class="team-name">Suzanny Alcântara</div>
+      <div class="team-role">Design</div>
+      <div class="team-desc">Assina o design do projeto, construindo a identidade visual em cada peça produzida.</div>
     </div>
   </div>
 
+  <!-- CONTATO -->
   <div class="contact-card">
     <div class="contact-copy">
       <h3>Contato</h3>
@@ -356,12 +447,12 @@
         Para acompanhar novidades, publicações e o movimento do projeto, o principal ponto de contato do Filtro Azul é o Instagram.
       </p>
     </div>
-
     <div class="contact-links">
-      <a class="contact-link" href="https://www.instagram.com/ofiltroazul/" target="_blank">Instagram</a>
+      <a class="contact-link primary" href="https://www.instagram.com/ofiltroazul/" target="_blank">Instagram</a>
       <a class="contact-link" href="index.html">Voltar ao site</a>
     </div>
   </div>
+
 </section>
 
 <footer>
