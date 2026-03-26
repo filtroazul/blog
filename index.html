@@ -9,6 +9,7 @@
   :root {
     --azul: #0A4BDB;
     --azul-cintilante: #1A6FFF;
+    --azul-escuro-orbit: #08379C;
     --vermelho: #8D0E0E;
     --vermelho-cintilante: #C91919;
     --vermelho-fundo: #7D0A0A;
@@ -21,7 +22,6 @@
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   html { scroll-behavior: smooth; }
 
   body {
@@ -65,13 +65,31 @@
     0%,100% { filter: brightness(1); }
     50% { filter: brightness(1.07); background-position: -2px 0; }
   }
+  @keyframes blue-text-pulse {
+    0%,100% {
+      fill: var(--azul-escuro-orbit);
+      text-shadow: 0 0 6px rgba(8,55,156,0.20);
+    }
+    50% {
+      fill: #0C47C6;
+      text-shadow: 0 0 14px rgba(10,75,219,0.42);
+    }
+  }
   @keyframes orbit-spin {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
-  @keyframes float-soft {
-    0%,100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+  @keyframes orbit-pulse {
+    0%,100% {
+      transform: scale(0.96);
+      filter: drop-shadow(0 0 4px rgba(8,55,156,0.20));
+      opacity: 0.92;
+    }
+    50% {
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 10px rgba(10,75,219,0.42));
+      opacity: 1;
+    }
   }
 
   /* ===== CORTINAS ===== */
@@ -530,6 +548,7 @@
     text-transform: uppercase;
     letter-spacing: 0.16em;
     color: rgba(255,255,255,0.78);
+    min-height: 1em;
   }
   .hero-badge-main {
     display: inline-block;
@@ -655,6 +674,7 @@
     margin-bottom: 20px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    min-height: 1em;
   }
   .poem-btn {
     display: inline-flex;
@@ -698,7 +718,7 @@
 
   .orbit-box {
     width: min(84%, 420px);
-    aspect-ratio: 0.78 / 1;
+    aspect-ratio: 0.62 / 1;
     position: relative;
     display: grid;
     place-items: center;
@@ -707,15 +727,13 @@
   .orbit-path {
     position: absolute;
     inset: 0;
-    border-radius: 38% / 12%;
+    border-radius: 46px;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
   }
 
   .orbit-text {
     position: absolute;
     inset: 0;
-    animation: orbit-spin 24s linear infinite;
-    transform-origin: center center;
   }
 
   .orbit-text svg {
@@ -725,7 +743,7 @@
   }
 
   .orbit-text text {
-    fill: rgba(255,255,255,0.92);
+    fill: rgba(255,255,255,0.93);
     font-size: 15px;
     font-weight: 500;
     letter-spacing: 0.5px;
@@ -733,108 +751,30 @@
   }
 
   .orbit-inner {
-    display: none;
+    position: absolute;
+    left: 50%;
+    bottom: 56px;
+    width: 72px;
+    height: 72px;
+    transform: translateX(-50%);
+    display: block;
+    background: transparent;
+    z-index: 3;
   }
 
-  /* ===== EQUIPE ===== */
-  .team-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-  }
-  .team-card {
-    text-align: center;
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .team-card.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .team-avatar {
-    width: 88px;
-    height: 88px;
-    border-radius: 50%;
-    margin: 0 auto 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Playfair Display', serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--branco);
-    position: relative;
-  }
-  .team-avatar::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: 50%;
-    padding: 1px;
-    background: linear-gradient(135deg, var(--azul-cintilante), var(--vermelho-cintilante));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
-  .team-name {
-    font-weight: 700;
-    font-size: 0.92rem;
-    margin-bottom: 4px;
-  }
-  .team-role {
-    font-size: 0.78rem;
-    color: var(--cinza);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+  .orbit-inner svg {
+    width: 100%;
+    height: 100%;
+    transform-origin: 50% 50%;
+    animation: orbit-spin 16s linear infinite, orbit-pulse 2.8s ease-in-out infinite;
   }
 
-  /* ===== SOCIAL ===== */
-  .social-bar {
-    background: var(--vermelho);
-    padding: 34px 5vw;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 20px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    position: relative;
-    overflow: hidden;
-  }
-  .social-bar::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, rgba(26,111,255,0.16) 0%, transparent 50%);
-    pointer-events: none;
-  }
-  .social-label {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.34rem;
-    color: white;
-    font-style: italic;
-  }
-  .social-links { display: flex; gap: 16px; }
-  .social-link {
-    width: 46px;
-    height: 46px;
-    background: rgba(255,255,255,0.12);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
+  .orbit-inner text {
+    fill: var(--azul-escuro-orbit);
+    font-size: 7px;
     font-weight: 700;
-    font-size: 0.74rem;
-    transition: background 0.2s, transform 0.2s;
-    border: 1px solid rgba(26,111,255,0.4);
-  }
-  .social-link:hover {
-    background: rgba(255,255,255,0.25);
-    transform: translateY(-3px);
-    border-color: var(--azul-cintilante);
+    letter-spacing: 0.18px;
+    animation: blue-text-pulse 2.2s ease-in-out infinite;
   }
 
   footer {
@@ -1096,10 +1036,6 @@
       order: -1;
     }
 
-    .team-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
     .section,
     .hero {
       padding-left: 6vw;
@@ -1131,12 +1067,18 @@
       padding: 50px 20px 28px;
     }
 
-    .team-grid {
-      grid-template-columns: 1fr;
+    .orbit-box {
+      width: min(90%, 340px);
     }
 
-    .social-label {
-      font-size: 1.1rem;
+    .orbit-inner {
+      bottom: 48px;
+      width: 64px;
+      height: 64px;
+    }
+
+    .orbit-inner text {
+      font-size: 6.4px;
     }
   }
 </style>
@@ -1178,8 +1120,7 @@
   <nav id="main-nav">
     <a href="#editorial" class="active" onclick="setActive(this)">Editorial</a>
     <a href="#poesias" onclick="setActive(this)">Poesias</a>
-    <a href="#equipe" onclick="setActive(this)">Equipe</a>
-    <a href="#contato" onclick="setActive(this)">Contato</a>
+    <a href="contato.html">Equipe</a>
   </nav>
 
   <div class="hamburger" onclick="toggleMobile()">
@@ -1190,8 +1131,7 @@
 <div class="nav-mobile" id="nav-mobile">
   <a href="#editorial">Editorial</a>
   <a href="#poesias">Poesias</a>
-  <a href="#equipe">Equipe</a>
-  <a href="#contato">Contato</a>
+  <a href="contato.html">Equipe</a>
 </div>
 
 <!-- ===== EDITORIAL ===== -->
@@ -1256,7 +1196,6 @@
 
   <div class="poems-wrap">
 
-    <!-- Poema 1 -->
     <article class="poem-row reveal">
       <div class="poem-copy">
         <div class="poem-kicker">Poesia 01</div>
@@ -1274,7 +1213,6 @@ Bom... quem quer viver às cegas?</p>
       </div>
     </article>
 
-    <!-- Poema 2 -->
     <article class="poem-row reverse reveal">
       <div class="orbit-card">
         <div class="orbit-box">
@@ -1286,7 +1224,7 @@ Bom... quem quer viver às cegas?</p>
 
       <div class="poem-copy">
         <div class="poem-kicker">Poesia 02</div>
-        <h2 class="poem-title">O que você perdeu quando ganhou o mundo na palma da mão?</h2>
+        <h2 class="poem-title">Toda minha vida</h2>
         <div class="poem-meta"></div>
         <p class="poem-excerpt">Uma frase que gira, volta e insiste.
 Como um pensamento que não sai da cabeça.
@@ -1295,7 +1233,6 @@ Como uma pergunta que a tela evita responder.</p>
       </div>
     </article>
 
-    <!-- Poema 3 -->
     <article class="poem-row reveal">
       <div class="poem-copy">
         <div class="poem-kicker">Poesia 03</div>
@@ -1314,7 +1251,6 @@ dose amarga do dia.</p>
       </div>
     </article>
 
-    <!-- Poema 4 -->
     <article class="poem-row reverse reveal">
       <div class="poem-image">
         <img src="Marcela4.jpg" alt="Poema Vida Real">
@@ -1334,46 +1270,6 @@ esse Instagram todo.</p>
 
   </div>
 </section>
-
-<!-- ===== EQUIPE ===== -->
-<section class="section" id="equipe" style="border-top:1px solid rgba(26,111,255,0.12);">
-  <div class="section-title">Equipe</div>
-  <p class="section-subtitle">As pessoas por trás do Filtro Azul</p>
-
-  <div class="team-grid">
-    <div class="team-card reveal">
-      <div class="team-avatar" style="background:rgba(10,75,219,0.3);">NM</div>
-      <div class="team-name">Nina Maria</div>
-      <div class="team-role">Editora & Curadora</div>
-    </div>
-
-    <div class="team-card reveal">
-      <div class="team-avatar" style="background:rgba(204,0,0,0.3);">GM</div>
-      <div class="team-name">Gladys Mendía</div>
-      <div class="team-role">Tradução & Poesia</div>
-    </div>
-
-    <div class="team-card reveal">
-      <div class="team-avatar" style="background:rgba(26,111,255,0.2);">RC</div>
-      <div class="team-name">Rafael Corrêa</div>
-      <div class="team-role">Colaboração Editorial</div>
-    </div>
-
-    <div class="team-card reveal">
-      <div class="team-avatar" style="background:rgba(238,0,0,0.2);">LA</div>
-      <div class="team-name">Lara Andrade</div>
-      <div class="team-role">Design Artístico</div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== CONTATO ===== -->
-<div class="social-bar" id="contato">
-  <p class="social-label">Nos encontre no Instagram ✦ @ofiltroazul</p>
-  <div class="social-links">
-    <a href="https://www.instagram.com/ofiltroazul/" target="_blank" class="social-link" title="Instagram">IG</a>
-  </div>
-</div>
 
 <footer>
   <div class="footer-logo"><span class="fa">Filtro</span> <span class="fb">Azul</span></div>
@@ -1405,7 +1301,6 @@ esse Instagram todo.</p>
 </div>
 
 <script>
-/* ===== CORTINAS ===== */
 function openCurtains() {
   var sc = document.getElementById('curtain-screen');
   sc.classList.add('opened');
@@ -1418,7 +1313,6 @@ function openCurtains() {
   }, 1900);
 }
 
-/* ===== NAV ===== */
 function setActive(el) {
   document.querySelectorAll('nav a').forEach(function(a){ a.classList.remove('active'); });
   el.classList.add('active');
@@ -1431,7 +1325,6 @@ function scrollToEl(id) {
   if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
-/* ===== PARALLAX ===== */
 (function initParallax(){
   var stage = document.getElementById('parallax-stage');
   if (!stage) return;
@@ -1461,7 +1354,6 @@ function scrollToEl(id) {
   });
 })();
 
-/* ===== POEMAS DATA ===== */
 var poems = [
   {
     cat: 'Poesia',
@@ -1647,7 +1539,6 @@ esse Instagram todo.`,
   }
 ];
 
-/* ===== MODAL ===== */
 function openPoemModal(idx) {
   var poem = poems[idx];
   var modal = document.getElementById('poem-modal');
@@ -1733,47 +1624,64 @@ function escapeHtml(str) {
     .replaceAll("'", '&#039;');
 }
 
-/* ===== ORBIT TEXT ===== */
 function buildOrbitText(outerId, innerId) {
   var phrase = 'O que você perdeu quando ganhou o mundo na palma da mão?';
   var outer = document.getElementById(outerId);
   var inner = document.getElementById(innerId);
 
   if (!outer) return;
-  if (inner) inner.innerHTML = '';
 
-  var repeated = Array(8).fill(phrase).join('   •   ');
-
+  var repeatedOuter = Array(6).fill(phrase).join('   •   ');
   outer.innerHTML = `
-    <svg viewBox="0 0 420 540" aria-hidden="true">
+    <svg viewBox="0 0 320 520" aria-hidden="true">
       <defs>
         <path id="${outerId}-path"
           d="
-            M 90 70
-            H 330
-            Q 375 70 375 120
-            V 420
-            Q 375 470 330 470
-            H 90
-            Q 45 470 45 420
-            V 120
-            Q 45 70 90 70
+            M 78 28
+            H 242
+            Q 278 28 278 64
+            V 430
+            Q 278 468 242 468
+            H 78
+            Q 42 468 42 430
+            V 64
+            Q 42 28 78 28
             Z
           " />
       </defs>
-
       <text>
         <textPath href="#${outerId}-path" startOffset="0%">
-          ${repeated}
+          ${repeatedOuter}
         </textPath>
       </text>
     </svg>
   `;
+
+  if (inner) {
+    var repeatedInner = Array(3).fill('na palma da mão').join(' • ');
+    inner.innerHTML = `
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <defs>
+          <path id="${innerId}-path"
+            d="
+              M 50,50
+              m -24,0
+              a 24,24 0 1,1 48,0
+              a 24,24 0 1,1 -48,0
+            " />
+        </defs>
+        <text>
+          <textPath href="#${innerId}-path" startOffset="0%">
+            ${repeatedInner}
+          </textPath>
+        </text>
+      </svg>
+    `;
+  }
 }
 
 buildOrbitText('orbitPreviewOuter', 'orbitPreviewInner');
 
-/* ===== REVEAL ===== */
 var observer = new IntersectionObserver(function(entries) {
   entries.forEach(function(entry) {
     if (entry.isIntersecting) {
@@ -1786,7 +1694,6 @@ document.querySelectorAll('.reveal').forEach(function(el) {
   observer.observe(el);
 });
 
-/* ===== LOADER ===== */
 document.getElementById('loader').classList.add('hide');
 </script>
 </body>
