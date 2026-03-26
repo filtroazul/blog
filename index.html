@@ -302,6 +302,7 @@
     justify-content: space-between;
     padding: 0 5vw;
     height: 68px;
+    gap: 22px;
   }
   .logo {
     font-family: 'Playfair Display', serif;
@@ -312,11 +313,20 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
+    margin-right: 12px;
+    white-space: nowrap;
   }
   .logo-filtro { color: var(--vermelho-cintilante); animation: shimmer-red 3s ease-in-out infinite; }
   .logo-azul { color: var(--azul-cintilante); animation: shimmer-blue 3s ease-in-out infinite; }
 
-  nav { display: flex; align-items: center; gap: 2rem; }
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-left: auto;
+    flex-wrap: nowrap;
+  }
   nav a {
     font-size: 0.82rem;
     font-weight: 500;
@@ -327,6 +337,7 @@
     position: relative;
     padding-bottom: 2px;
     transition: color 0.2s;
+    white-space: nowrap;
   }
   nav a::after {
     content: '';
@@ -1011,6 +1022,26 @@
   }
 
   /* ===== RESPONSIVO ===== */
+  @media (max-width: 1180px) {
+    header {
+      padding: 0 4vw;
+      gap: 18px;
+    }
+
+    .logo {
+      margin-right: 18px;
+    }
+
+    nav {
+      gap: 1.45rem;
+    }
+
+    nav a {
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+    }
+  }
+
   @media (max-width: 1080px) {
     .hero {
       grid-template-columns: 1fr;
